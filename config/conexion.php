@@ -1,5 +1,5 @@
 <?php
-$host = "localhost";
+$host = "127.0.0.1";
 $bd = "sistema_envios";
 $usuario = "devops";
 $password = "devops123";
