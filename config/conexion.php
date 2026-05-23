@@ -1,9 +1,9 @@
 <?php
-$host = "mysql.railway.internal";
-$puerto = "3306";
-$bd = "railway";
-$usuario = "root";
-$password = "yGnqvjrDOvBgjmPTzxuywUenFHcLjFur";
+$host = "mysql-369bddc3-miumg-2780.f.aivencloud.com";
+$puerto = "12292";
+$bd = "defaultdb";
+$usuario = "avnadmin";
+$password = "AVNS_3-Rz_QGSMx37KojB1YO";
 
 try {
     $conexion = new PDO(
