@@ -1,12 +1,14 @@
 <?php
 $host = "mysql-production-0d45.up.railway.app";
+$puerto = "3306";
+
 $bd = "railway";
 $usuario = "root";
 $password = "yGnqvjrDOvBgjmPTzxuywUenFHcLjFur";
 
 try {
     $conexion = new PDO(
-        "mysql:host=$host;dbname=$bd;charset=utf8mb4",
+        "mysql:host=$host;port=$puerto;dbname=$bd;charset=utf8mb4",
         $usuario,
         $password
     );
