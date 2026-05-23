@@ -1,5 +1,5 @@
 <?php
-$host = "kodama.proxy.rlwy.net";
+$host = "mysql-production-0d45.up.railway.app";
 $puerto = "42294";
 $bd = "railway";
 $usuario = "root";
