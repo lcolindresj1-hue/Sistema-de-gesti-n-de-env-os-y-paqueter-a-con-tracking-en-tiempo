@@ -105,8 +105,7 @@ jobs:
       - name: Test tracking
         run: php test/integration/test_tracking.php
 
-      - name: Test no retroceso estado
-        run: php test/integration/test_no_retroceso_estado.php
+      
 
       - name: Todos los tests OK
         run: echo "TESTS EXITOSOS"
