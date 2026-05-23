@@ -15,7 +15,6 @@ try {
     $conexion->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     $conexion->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
 
-    echo "Conexión exitosa a Railway";
 
 } catch (PDOException $e) {
     die("Error de conexión a la base de datos: " . $e->getMessage());
