@@ -1,6 +1,6 @@
 <?php
 $host = "mysql-production-0d45.up.railway.app";
-$puerto = "42294";
+$puerto = "3306";
 $bd = "railway";
 $usuario = "root";
 $password = "yGnqvjrDOvBgjmPTzxuywUenFHcLjFur";
