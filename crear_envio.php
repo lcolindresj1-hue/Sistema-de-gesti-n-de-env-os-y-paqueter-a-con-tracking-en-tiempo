@@ -1,6 +1,7 @@
 <?php
 require_once 'includes/funciones.php';
 requiereLogin();
+
 require_once 'config/conexion.php';
 
 $mensaje = '';
@@ -11,10 +12,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $telefono = trim($_POST['telefono_destinatario'] ?? '');
     $direccion = trim($_POST['direccion_destinatario'] ?? '');
     $descripcion = trim($_POST['descripcion_paquete'] ?? '');
+    $peso = trim($_POST['peso'] ?? '');
+    $tipoPaquete = trim($_POST['tipo_paquete'] ?? '');
+    $esFragil = isset($_POST['es_fragil']) ? 1 : 0;
     $observaciones = trim($_POST['observaciones'] ?? '');
+    $instrucciones = trim($_POST['instrucciones_entrega'] ?? '');
 
-    if ($nombre === '' || $telefono === '' || $direccion === '' || $descripcion === '') {
+    if ($nombre === '' || $telefono === '' || $direccion === '' || $descripcion === '' || $peso === '') {
         $error = 'Complete los campos obligatorios.';
+    } elseif (!is_numeric($peso) || (float)$peso <= 0) {
+        $error = 'El peso debe ser un número mayor a cero.';
     } else {
         try {
             $conexion->beginTransaction();
@@ -24,14 +31,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmtEstado = $conexion->prepare("
                 SELECT id_estado
                 FROM estado
-                WHERE nombre_estado = 'Registrado'
+                WHERE nombre_estado = 'Paquete registrado'
                 LIMIT 1
             ");
             $stmtEstado->execute();
             $estado = $stmtEstado->fetch();
 
             if (!$estado) {
-                throw new Exception("No existe el estado inicial 'Registrado'.");
+                throw new Exception("No existe el estado inicial 'Paquete registrado'.");
             }
 
             $idEstado = (int)$estado['id_estado'];
@@ -44,8 +51,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     telefono_destinatario,
                     direccion_destinatario,
                     descripcion_paquete,
+                    peso,
+                    es_fragil,
+                    tipo_paquete,
                     estado_actual_id,
-                    observaciones
+                    observaciones,
+                    instrucciones_entrega
                 )
                 VALUES (
                     :codigo,
@@ -54,8 +65,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     :telefono,
                     :direccion,
                     :descripcion,
+                    :peso,
+                    :es_fragil,
+                    :tipo_paquete,
                     :estado,
-                    :observaciones
+                    :observaciones,
+                    :instrucciones
                 )
             ";
 
@@ -67,8 +82,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ':telefono' => $telefono,
                 ':direccion' => $direccion,
                 ':descripcion' => $descripcion,
+                ':peso' => (float)$peso,
+                ':es_fragil' => $esFragil,
+                ':tipo_paquete' => $tipoPaquete,
                 ':estado' => $idEstado,
-                ':observaciones' => $observaciones
+                ':observaciones' => $observaciones,
+                ':instrucciones' => $instrucciones
             ]);
 
             $idEnvio = $conexion->lastInsertId();
@@ -87,7 +106,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     :comentario
                 )
             ");
-
             $stmtHist->execute([
                 ':envio' => $idEnvio,
                 ':estado' => $idEstado,
@@ -146,12 +164,43 @@ include 'includes/header.php';
 
             <div class="mb-3">
                 <label class="form-label">Descripción del paquete *</label>
-                <input type="text" name="descripcion_paquete" class="form-control" required>
+                <input type="text" name="descripcion_paquete" class="form-control" placeholder="Ej. Caja pequeña, documentos, repuestos" required>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Peso del paquete en kg *</label>
+                    <input type="number" name="peso" class="form-control" min="0.01" step="0.01" placeholder="Ej. 2.50" required>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Tipo de paquete</label>
+                    <select name="tipo_paquete" class="form-select">
+                        <option value="">Seleccione</option>
+                        <option value="Caja">Caja</option>
+                        <option value="Sobre">Sobre</option>
+                        <option value="Documento">Documento</option>
+                        <option value="Bolsa">Bolsa</option>
+                        <option value="Otro">Otro</option>
+                    </select>
+                </div>
+
+                <div class="col-md-4 mb-3 d-flex align-items-end">
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" name="es_fragil" value="1" id="es_fragil">
+                        <label class="form-check-label" for="es_fragil">Paquete frágil</label>
+                    </div>
+                </div>
             </div>
 
             <div class="mb-3">
                 <label class="form-label">Observaciones</label>
-                <textarea name="observaciones" class="form-control" rows="2"></textarea>
+                <textarea name="observaciones" class="form-control" rows="2" placeholder="Ej. Caja sellada, revisar identificación"></textarea>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Instrucciones de entrega</label>
+                <textarea name="instrucciones_entrega" class="form-control" rows="2" placeholder="Ej. Entregar de 8:00 a 16:00"></textarea>
             </div>
 
             <button type="submit" class="btn btn-primary">Crear solicitud</button>
