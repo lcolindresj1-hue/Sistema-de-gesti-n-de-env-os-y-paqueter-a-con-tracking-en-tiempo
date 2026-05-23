@@ -1,7 +1,6 @@
 <?php
 $host = "kodama.proxy.rlwy.net";
 $puerto = "42294";
-
 $bd = "railway";
 $usuario = "root";
 $password = "yGnqvjrDOvBgjmPTzxuywUenFHcLjFur";
