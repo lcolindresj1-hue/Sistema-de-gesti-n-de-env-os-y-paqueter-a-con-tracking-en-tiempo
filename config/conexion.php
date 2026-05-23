@@ -1,5 +1,5 @@
 <?php
-$host = "mysql-production-0d45.up.railway.app";
+$host = "mysql.railway.internal";
 $puerto = "3306";
 $bd = "railway";
 $usuario = "root";
