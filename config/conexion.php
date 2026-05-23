@@ -1,8 +1,8 @@
 <?php
-$host = "127.0.0.1";
-$bd = "sistema_envios";
-$usuario = "devops";
-$password = "devops123";
+$host = "mysql-production-0d45.up.railway.app";
+$bd = "railway";
+$usuario = "root";
+$password = "yGnqvjrDOvBgjmPTzxuywUenFHcLjFur";
 
 try {
     $conexion = new PDO(
