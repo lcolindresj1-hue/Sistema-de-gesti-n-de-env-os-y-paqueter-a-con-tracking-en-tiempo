@@ -28,7 +28,7 @@ try {
             e.instrucciones_entrega,
             e.fecha_registro,
             es.nombre_estado,
-            es.orden,
+            es.orden_estado AS orden,
             es.es_final
         FROM envio e
         INNER JOIN estado es ON e.estado_actual_id = es.id_estado
@@ -39,6 +39,7 @@ try {
     $stmt = $conexion->prepare($sql);
     $stmt->bindValue(':codigo', $codigo);
     $stmt->execute();
+
     $envio = $stmt->fetch();
 
     if (!$envio) {
@@ -54,7 +55,7 @@ try {
             h.fecha_hora,
             es.nombre_estado,
             es.descripcion,
-            es.orden,
+            es.orden_estado AS orden,
             h.comentario
         FROM historia_estado h
         INNER JOIN estado es ON h.id_estado = es.id_estado
@@ -65,6 +66,7 @@ try {
     $stmtHist = $conexion->prepare($sqlHist);
     $stmtHist->bindValue(':id', $envio['id_envio'], PDO::PARAM_INT);
     $stmtHist->execute();
+
     $historial = $stmtHist->fetchAll();
 
     echo json_encode([
@@ -72,6 +74,7 @@ try {
         'envio' => $envio,
         'historial' => $historial
     ]);
+
 } catch (Throwable $e) {
     http_response_code(500);
 
