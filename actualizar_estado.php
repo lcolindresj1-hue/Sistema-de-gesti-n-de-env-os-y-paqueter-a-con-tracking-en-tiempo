@@ -1,16 +1,8 @@
 <?php
-session_start();
+require_once 'includes/funciones.php';
+requiereLogin();
 
 require_once 'config/conexion.php';
-
-if (!isset($_SESSION['id_usuario'])) {
-    header('Location: login.php');
-    exit;
-}
-
-function e($valor) {
-    return htmlspecialchars((string)$valor, ENT_QUOTES, 'UTF-8');
-}
 
 $idEnvio = intval($_GET['id'] ?? 0);
 
@@ -19,7 +11,11 @@ if ($idEnvio <= 0) {
 }
 
 $stmtEnvio = $conexion->prepare("
-    SELECT e.*, es.nombre_estado, es.orden AS orden_actual, es.es_final
+    SELECT 
+        e.*,
+        es.nombre_estado,
+        es.orden_estado AS orden_actual,
+        es.es_final
     FROM envio e
     INNER JOIN estado es ON e.estado_actual_id = es.id_estado
     WHERE e.id_envio = :id
@@ -35,10 +31,12 @@ if (!$envio) {
 $estadosStmt = $conexion->prepare("
     SELECT *
     FROM estado
-    WHERE orden >= :orden_actual
-    ORDER BY orden ASC, id_estado ASC
+    WHERE orden_estado >= :orden_actual
+    ORDER BY orden_estado ASC, id_estado ASC
 ");
-$estadosStmt->execute([':orden_actual' => (int)$envio['orden_actual']]);
+$estadosStmt->execute([
+    ':orden_actual' => (int)$envio['orden_actual']
+]);
 $estados = $estadosStmt->fetchAll();
 
 $mensaje = '';
@@ -53,12 +51,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         try {
             $stmtNuevo = $conexion->prepare("
-                SELECT id_estado, nombre_estado, orden, es_final
+                SELECT 
+                    id_estado,
+                    nombre_estado,
+                    orden_estado,
+                    es_final
                 FROM estado
                 WHERE id_estado = :id
                 LIMIT 1
             ");
-            $stmtNuevo->execute([':id' => $idEstado]);
+            $stmtNuevo->execute([
+                ':id' => $idEstado
+            ]);
             $estadoNuevo = $stmtNuevo->fetch();
 
             if (!$estadoNuevo) {
@@ -69,7 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 throw new Exception('Este envío ya está en un estado final y no puede modificarse.');
             }
 
-            if ((int)$estadoNuevo['orden'] < (int)$envio['orden_actual']) {
+            if ((int)$estadoNuevo['orden_estado'] < (int)$envio['orden_actual']) {
                 throw new Exception('No se permite regresar a una etapa anterior del tracking.');
             }
 
@@ -86,8 +90,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ]);
 
             $stmtHist = $conexion->prepare("
-                INSERT INTO historia_estado (id_envio, id_estado, id_usuario, comentario)
-                VALUES (:envio, :estado, :usuario, :comentario)
+                INSERT INTO historia_estado (
+                    id_envio,
+                    id_estado,
+                    id_usuario,
+                    comentario
+                )
+                VALUES (
+                    :envio,
+                    :estado,
+                    :usuario,
+                    :comentario
+                )
             ");
             $stmtHist->execute([
                 ':envio' => $idEnvio,
@@ -100,10 +114,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             header('Location: detalle_envio.php?id=' . $idEnvio);
             exit;
+
         } catch (Exception $e) {
             if ($conexion->inTransaction()) {
                 $conexion->rollBack();
             }
+
             $error = 'Error al actualizar el estado: ' . $e->getMessage();
         }
     }
@@ -112,6 +128,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $tituloPagina = 'Actualizar estado';
 $subtituloPagina = 'Cambio de estado y registro en historial del envío';
 $paginaActiva = 'historial';
+
 include 'includes/header.php';
 ?>
 
@@ -132,30 +149,51 @@ include 'includes/header.php';
             <div class="alert alert-warning">
                 Este envío ya está finalizado. No permite cambios de estado.
             </div>
-            <a href="detalle_envio.php?id=<?= (int)$idEnvio ?>" class="btn btn-outline-secondary">Volver</a>
+
+            <a href="detalle_envio.php?id=<?= (int)$idEnvio ?>" class="btn btn-outline-secondary">
+                Volver
+            </a>
         <?php else: ?>
+
             <form method="POST">
                 <div class="mb-3">
                     <label class="form-label">Nuevo estado</label>
+
                     <select name="id_estado" class="form-select" required>
                         <option value="">Seleccione</option>
+
                         <?php foreach ($estados as $estado): ?>
                             <option value="<?= (int)$estado['id_estado'] ?>">
                                 <?= e($estado['nombre_estado']) ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
-                    <small class="text-muted">Solo se muestran estados iguales o posteriores. Nada de retroceder: aquí el tracking no tiene reversa.</small>
+
+                    <small class="text-muted">
+                        Solo se muestran estados iguales o posteriores.
+                    </small>
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label">Comentario</label>
-                    <textarea name="comentario" class="form-control" rows="3" placeholder="Ej. Paquete recibido en oficina central"></textarea>
+
+                    <textarea
+                        name="comentario"
+                        class="form-control"
+                        rows="3"
+                        placeholder="Ej. Paquete recibido en oficina central"
+                    ></textarea>
                 </div>
 
-                <button type="submit" class="btn btn-primary">Guardar cambio</button>
-                <a href="detalle_envio.php?id=<?= (int)$idEnvio ?>" class="btn btn-outline-secondary">Cancelar</a>
+                <button type="submit" class="btn btn-primary">
+                    Guardar cambio
+                </button>
+
+                <a href="detalle_envio.php?id=<?= (int)$idEnvio ?>" class="btn btn-outline-secondary">
+                    Cancelar
+                </a>
             </form>
+
         <?php endif; ?>
     </div>
 </div>
